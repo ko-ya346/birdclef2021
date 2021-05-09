@@ -4,3 +4,6 @@ input
 output
 
 .build
+main.log
+poetry.lock
+pyproject.toml
