@@ -1,7 +1,7 @@
 import base64
 import gzip
 from pathlib import Path
-from src.utils.misc import get_current_commit_hash
+from src.misc import get_current_commit_hash
 
 template = """
 import gzip
