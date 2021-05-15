@@ -119,3 +119,6 @@ for i, (trn_idx, val_idx) in enumerate(splitter.split(train, y=train["primary_la
     del model, optimizer, scheduler
     gc.collect()
     torch.cuda.empty_cache()
+
+text = 'finish train'
+send_line_message(text)
