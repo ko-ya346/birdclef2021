@@ -48,7 +48,8 @@ def prepare_model_for_inference(model, path: Path):
 def prediction_for_clip(test_df: pd.DataFrame,
                         clip: np.ndarray,
                         model,
-                        threshold=0.5):
+                        threshold=0.5,
+                        pred_keys='clipwise_output'):
 
     dataset = TestDataset(df=test_df,
                           clip=clip,
@@ -64,7 +65,7 @@ def prediction_for_clip(test_df: pd.DataFrame,
 
         with torch.no_grad():
             prediction = model(image)
-            proba = prediction["clipwise_output"].detach().cpu().numpy().reshape(-1)
+            proba = prediction[pred_keys].detach().cpu().numpy().reshape(-1)
 
         events = proba >= threshold
         labels = np.argwhere(events).reshape(-1).tolist()
@@ -80,7 +81,8 @@ def prediction_for_clip(test_df: pd.DataFrame,
 def prediction(test_audios,
 	       logger,
                weights_path: Path,
-               threshold=0.5):
+               threshold=0.5,
+               pred_keys='clipwise_output'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = TimmSED(base_model_name=CFG.base_model_name,
                     pretrained=False,
@@ -109,7 +111,8 @@ def prediction(test_audios,
             prediction_dict = prediction_for_clip(test_df,
                                                   clip=clip,
                                                   model=model,
-                                                  threshold=threshold)
+                                                  threshold=threshold,
+                                                  pred_keys=pred_keys)
         row_id = list(prediction_dict.keys())
         birds = list(prediction_dict.values())
         prediction_df = pd.DataFrame({
