@@ -3,6 +3,7 @@ import os
 import math
 import random
 import warnings
+import librosa
 
 import albumentations as A
 import cv2
@@ -123,7 +124,6 @@ class TestDataset(torchdata.Dataset):
             y = self.waveform_transforms(y)
 
         y = np.nan_to_num(y)
-
         return y, row_id
 
 
@@ -148,13 +148,12 @@ def get_transforms(phase: str):
         else:
             return None
 
-
 def get_waveform_transforms(config: dict, phase: str):
     return get_transforms(config, phase)
 
-
 def get_spectrogram_transforms(config: dict, phase: str):
-    transforms = config.get('spectrogram_transforms')
+    transforms = config.get('transforms')
+#    transforms = config.get('spectrogram_transforms')
     if transforms is None:
         return None
     else:
@@ -177,7 +176,6 @@ def get_spectrogram_transforms(config: dict, phase: str):
             return A.Compose(trns_list, p=1.0)
         else:
             return None
-
 
 class Normalize:
     def __call__(self, y: np.ndarray):
@@ -220,11 +218,58 @@ class AudioTransform:
         raise NotImplementedError
 
 
+
+class MelSpectrogram(AudioTransform):
+    '''
+    メルスペクトログラムに変換する
+    '''
+    def __init__(self, always_apply=True, p=0.5, sr=32000,
+            n_mels=128, fmin=20, fmax=16001):
+        super().__init__(always_apply, p)
+        self.sr = sr
+        self.n_mels = n_mels
+        self.fmin = fmin
+        self.fmax = fmax
+
+    def apply(self, y: np.ndarray, **params):
+        melspec = librosa.feature.melspectrogram(
+                y, sr=self.sr, n_mels=self.n_mels,
+                fmin=self.fmin, fmax=self.fmax, **params
+                )
+        augmented = librosa.power_to_db(melspec).astype(np.float32)        
+        return augmented
+
+class MFCC(AudioTransform):
+    '''
+    MFCCに変換する
+    '''
+    def __init__(self, always_apply=True, p=0.5, sr=32000,
+            n_mels=128, fmin=20, fmax=16001, n_mfcc=20,
+            dct_type=2, norm='ortho'):
+        super().__init__(always_apply, p)
+        self.sr = sr
+        self.n_mels = n_mels
+        self.fmin = fmin
+        self.fmax = fmax
+        self.n_mfcc = n_mfcc
+        self.dct_type = dct_type
+        self.norm = norm
+
+    def apply(self, y: np.ndarray, **params):
+        mfcc = librosa.feature.mfcc(
+                y, sr=self.sr, n_mels=self.n_mels,
+                fmin=self.fmin, fmax=self.fmax, 
+                n_mfcc=self.n_mfcc, dct_type=self.dct_type,
+                norm=self.norm, **params
+                )
+        augmented = mfcc.astype(np.float32)        
+        return augmented 
+
 class NoiseInjection(AudioTransform):
     def __init__(self, always_apply=False, p=0.5, max_noise_level=0.5, sr=32000):
         super().__init__(always_apply, p)
 
-        self.noise_level = (0.0, max_noise_level)
+        self.noise_level = (0.01, max_noise_level)
         self.sr = sr
 
     def apply(self, y: np.ndarray, **params):

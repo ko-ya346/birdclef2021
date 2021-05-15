@@ -6,9 +6,9 @@ class CFG:
     # Globals #
     ######################
     seed = 1213
-    epochs = 50 
+    epochs = 10 
     train = True
-    folds = [0, 1, 2, 3, 4]
+    folds = [0]
     img_size = 224
     main_metric = "epoch_f1_at_05"
     minimize_metric = False
@@ -23,11 +23,39 @@ class CFG:
     ######################
     # Dataset #
     ######################
+    train_transform_dic = [{ 
+            'name': 'Normalize'
+            },
+            {'name': 'GaussianNoise', 
+                'params': {
+                    'p': 0.3
+                    }
+                },
+            {'name': 'PinkNoise',
+                'params': {
+                    'p': 0.3
+                    }
+                },
+            {'name': 'PitchShift',
+                'params': {
+                    'p': 0.3
+                    }
+                },
+            {'name': 'TimeStretch',
+                'params': {
+                    'p': 0.3
+                    }
+            ]
+    test_transform_dic = [{
+            'name': 'Normalize'
+            },
+                ]
     transforms = {
-        "train": [{"name": "Normalize"}],
-        "valid": [{"name": "Normalize"}],
-        "test": [{"name": "Normalize"}]
+        "train": train_transform_dic,
+        "valid": train_transform_dic,
+        "test": test_transform_dic
     }
+
     period = 20
     n_mels = 128
     fmin = 20
@@ -35,11 +63,6 @@ class CFG:
     n_fft = 2048
     hop_length = 512
     sample_rate = 32000
-    melspectrogram_parameters = {
-        "n_mels": 224,
-        "fmin": 20,
-        "fmax": 16000
-    }
 
     target_columns = [
         'acafly', 'acowoo', 'aldfly', 'ameavo', 'amecro',

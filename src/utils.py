@@ -1,4 +1,6 @@
 import sys
+import requests
+import json
 import cv2
 import audioread
 import logging
@@ -240,3 +242,19 @@ def get_runner(device: torch.device):
             device=device, 
             input_key="image", 
             input_target_key="targets")
+
+def send_line_message(text):
+    '''
+    LINEにtextの内容を送信する。
+    '''
+    token = get_line_token()
+    line_api = 'https://notify-api.line.me/api/notify'
+    headers = {'Authorization': f'Bearer {token}'}
+    data = {'message': f'message: {text:}'}
+    requests.post(line_api, headers=headers, data=data)
+
+
+def get_line_token():
+    with open('line_token.json', 'r') as f:
+         token = json.load(f)['token']
+    return token
