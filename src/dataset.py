@@ -17,6 +17,7 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as torchdata
+import colorednoise as cn
 
 from pathlib import Path
 from typing import List
@@ -59,6 +60,8 @@ class WaveformDataset(torchdata.Dataset):
         ebird_code = sample["primary_label"]
 
         y, sr = sf.read(self.datadir / ebird_code / wav_name)
+        if self.waveform_transforms:
+            y = self.waveform_transforms(y)
 
         len_y = len(y)
         effective_length = sr * self.period
@@ -78,11 +81,6 @@ class WaveformDataset(torchdata.Dataset):
             y = y[start:start + effective_length].astype(np.float32)
         else:
             y = y.astype(np.float32)
-
-        y = np.nan_to_num(y)
-
-        if self.waveform_transforms:
-            y = self.waveform_transforms(y)
 
         y = np.nan_to_num(y)
 

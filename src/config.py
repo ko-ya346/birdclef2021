@@ -9,7 +9,7 @@ class CFG:
     epochs = 10 
     train = True
     folds = [0]
-    img_size = 224
+    img_size = 112 
     main_metric = "epoch_f1_at_05"
     minimize_metric = False
 
@@ -23,28 +23,42 @@ class CFG:
     ######################
     # Dataset #
     ######################
-    train_transform_dic = [{ 
-            'name': 'Normalize'
-            },
+    period = 5 
+    n_mels = 32 
+    sample_rate = 16000
+    fmin = 200
+    fmax = sample_rate // 2
+    n_fft = 4096
+    hop_length = n_fft // 4
+
+    train_transform_dic = [
             {'name': 'GaussianNoise', 
                 'params': {
-                    'p': 0.3
+                    'p': 0.3,
+                    'sr': sample_rate
                     }
                 },
             {'name': 'PinkNoise',
                 'params': {
-                    'p': 0.3
+                    'p': 0.3,
+                    'sr': sample_rate
                     }
                 },
+            { 
+            'name': 'Normalize'
+            },
             {'name': 'PitchShift',
                 'params': {
-                    'p': 0.3
+                    'p': 0.3,
+                    'sr': sample_rate
                     }
                 },
             {'name': 'TimeStretch',
                 'params': {
-                    'p': 0.3
+                    'p': 0.3,
+                    'sr': sample_rate
                     }
+                },
             ]
     test_transform_dic = [{
             'name': 'Normalize'
@@ -56,13 +70,6 @@ class CFG:
         "test": test_transform_dic
     }
 
-    period = 20
-    n_mels = 128
-    fmin = 20
-    fmax = 16000
-    n_fft = 2048
-    hop_length = 512
-    sample_rate = 32000
 
     target_columns = [
         'acafly', 'acowoo', 'aldfly', 'ameavo', 'amecro',
@@ -133,19 +140,22 @@ class CFG:
     ######################
     loader_params = {
         "train": {
-            "batch_size": 8,
-            "num_workers": 1,
-            "shuffle": True
+            "batch_size": 128,
+            "num_workers": 0,
+            "shuffle": True,
+            'pin_memory': True
         },
         "valid": {
-            "batch_size": 8,
-            "num_workers": 1,
-            "shuffle": False
+            "batch_size": 128,
+            "num_workers": 0,
+            "shuffle": False,
+            'pin_memory': True
         },
         "test": {
             "batch_size": 64,
             "num_workers": 20,
-            "shuffle": False
+            "shuffle": False,
+            'pin_memory': True
         }
     }
 
