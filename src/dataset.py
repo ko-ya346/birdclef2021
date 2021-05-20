@@ -59,17 +59,22 @@ class WaveformDataset(torchdata.Dataset):
 
     def __getitem__(self, idx: int):
         sample = self.df.loc[idx, :]
-        wav_name = sample["filename"]
+        wav_name = sample["filename"] + '.npy'
         ebird_code = sample["primary_label"]
 
-        y = np.read(self.datadir / ebird_code / wav_name / '.npy')
-        y = self._normalize(y) 
+        y = np.load(self.datadir / ebird_code / wav_name)
+#        y = self._normalize(y) 
 
-        if self.waveform_transforms:
-            y = self.waveform_transforms(y)
+        # todo 引数で与えるように変更
+        sr = 32000
+
+#        if self.waveform_transforms:
+#            y = self.waveform_transforms(y)
 
         len_y = y.shape[1]
-        effective_length = sr * self.period
+        
+        effective_length = sr * self.period // CFG.n_fft
+        
         if len_y < effective_length:
             new_y = np.zeros((y.shape[0], effective_length), 
                     dtype=y.dtype)
@@ -88,6 +93,8 @@ class WaveformDataset(torchdata.Dataset):
 
         y = y.astype(np.float32)
         y = np.nan_to_num(y)
+        y = y.transpose(1, 0)
+        y = y[np.newaxis, ...]
 
         labels = np.zeros(len(CFG.target_columns), dtype=float)
         labels[CFG.target_columns.index(ebird_code)] = 1.0

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 INPUT_DIR = './input'
+
 class CFG:
     ######################
     # Globals #
@@ -8,7 +9,7 @@ class CFG:
     seed = 1213
     epochs = 10 
     train = True
-    folds = [0]
+    folds = [0, 1, 2]
     img_size = 112 
     main_metric = "epoch_f1_at_05"
     minimize_metric = False
@@ -16,19 +17,19 @@ class CFG:
     ######################
     # Data #
     ######################
-    train_datadir = Path(f"{INPUT_DIR}/train_short_audio")
+    train_datadir = Path('./output/train_short_audio')
     train_csv = f"{INPUT_DIR}/train_metadata.csv"
     train_soundscape = f"{INPUT_DIR}/train_soundscape_labels.csv"
 
     ######################
     # Dataset #
     ######################
-    period = 5 
-    n_mels = 32 
-    sample_rate = 16000
+    period = 20 
+    n_mels = 128 
+    sample_rate = 32000
     fmin = 200
     fmax = sample_rate // 2
-    n_fft = 4096
+    n_fft = 2048
     hop_length = n_fft // 4
 
     train_transform_dic = [
@@ -140,13 +141,13 @@ class CFG:
     ######################
     loader_params = {
         "train": {
-            "batch_size": 128,
+            "batch_size": 64,
             "num_workers": 0,
             "shuffle": True,
             'pin_memory': True
         },
         "valid": {
-            "batch_size": 128,
+            "batch_size": 64,
             "num_workers": 0,
             "shuffle": False,
             'pin_memory': True
@@ -164,7 +165,7 @@ class CFG:
     ######################
     split = "StratifiedKFold"
     split_params = {
-        "n_splits": 5,
+        "n_splits": 3,
         "shuffle": True,
         "random_state": 1213
     }
