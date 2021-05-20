@@ -32,13 +32,6 @@ from torchlibrosa.stft import LogmelFilterBank, Spectrogram
 from torchlibrosa.augmentation import SpecAugmentation
 
 
-from pathlib import Path
-
-INPUT_DIR = './input'
-
-import sys
-sys.path.append('src')
-
 from src.config import CFG
 from src.dataset import *
 from src.model import *
@@ -46,8 +39,12 @@ from src.lossess import *
 from src.get_model import *
 from src.utils import *
 
+
+INPUT_DIR = './input'
+DEBUG = False
+
+
 def main():
-    DEBUG = True
     if DEBUG:
         CFG.epochs = 1
 
@@ -87,7 +84,6 @@ def main():
                 WaveformDataset(
                     df_,
                     CFG.train_datadir,
-                    img_size=CFG.img_size,
                     waveform_transforms=get_transforms(phase),
                     period=CFG.period,
                     validation=(phase == "valid")

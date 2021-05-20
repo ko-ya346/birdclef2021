@@ -236,11 +236,11 @@ class TimmSED(nn.Module):
         init_layer(self.fc1)
         init_bn(self.bn0)
 
-    def forward(self, input):
+    def forward(self, input_data):
         # (batch_size, 1, time_steps, freq_bins)
-        x = self.spectrogram_extractor(input)
-        x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
-
+#        x = self.spectrogram_extractor(input_data)
+#        x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
+        x = input_data
         frames_num = x.shape[2]
 
         x = x.transpose(1, 3)
