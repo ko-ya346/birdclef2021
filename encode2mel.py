@@ -26,8 +26,7 @@ for i in tqdm(range(len(AUDIO_PATHS))):
         
     audio, sr = sf.read(filepath)
 
-    mel = librosa.feature.melspectrogram(
-            y=audio, 
+    mel = librosa.feature.melspectrogram(y=audio, 
             sr=sr,
             n_fft=CFG.n_fft,
             hop_length=CFG.hop_length,
