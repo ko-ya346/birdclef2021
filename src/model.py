@@ -240,6 +240,7 @@ class TimmSED(nn.Module):
         # (batch_size, 1, time_steps, freq_bins)
 #        x = self.spectrogram_extractor(input_data)
 #        x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
+
         x = input_data
         frames_num = x.shape[2]
 
