@@ -63,12 +63,10 @@ class WaveformDataset(torchdata.Dataset):
         ebird_code = sample["primary_label"]
 
         y = np.load(self.datadir / ebird_code / wav_name)
-
-        # todo 引数で与えるように変更
         sr = 32000
 
-#        if self.waveform_transforms:
-#            y = self.waveform_transforms(y)
+        if self.waveform_transforms:
+            y = self.waveform_transforms(y)
 
         len_y = y.shape[1]
         
@@ -93,6 +91,8 @@ class WaveformDataset(torchdata.Dataset):
         y = y.astype(np.float32)
         y = np.nan_to_num(y)
         y = y.transpose(1, 0)
+
+        # channelの次元を足す
         y = y[np.newaxis, ...]
 
         labels = np.zeros(len(CFG.target_columns), dtype=float)
@@ -128,15 +128,25 @@ class TestDataset(torchdata.Dataset):
         y = self.clip[start_index:end_index].astype(np.float32)
 
         y = np.nan_to_num(y)
+        y = librosa.feature.melspectrogram(
+                y=y, sr=SR, n_fft=CFG.n_fft, hop_length=CFG.hop_length,
+           )
+        y = librosa.power_to_db(y, ref=np.max)
 
         if self.waveform_transforms:
             y = self.waveform_transforms(y)
 
-        y = np.nan_to_num(y)
         return y, row_id
 
 
 def get_transforms(phase: str):
+    """
+    phase(train, valid, test)に設定したtransformsを呼び出す
+    transformsは
+    key: [train, valid, test]   
+    value: list(dict(name: transform_name, params: ... ), dict(), ...)
+    
+    """
     transforms = CFG.transforms
     if transforms is None:
         return None
@@ -160,31 +170,6 @@ def get_transforms(phase: str):
 def get_waveform_transforms(config: dict, phase: str):
     return get_transforms(config, phase)
 
-def get_spectrogram_transforms(config: dict, phase: str):
-    transforms = config.get('transforms')
-#    transforms = config.get('spectrogram_transforms')
-    if transforms is None:
-        return None
-    else:
-        if transforms[phase] is None:
-            return None
-        trns_list = []
-        for trns_conf in transforms[phase]:
-            trns_name = trns_conf["name"]
-            trns_params = {} if trns_conf.get("params") is None else \
-                trns_conf["params"]
-            if hasattr(A, trns_name):
-                trns_cls = A.__getattribute__(trns_name)
-                trns_list.append(trns_cls(**trns_params))
-            else:
-                trns_cls = globals().get(trns_name)
-                if trns_cls is not None:
-                    trns_list.append(trns_cls(**trns_params))
-
-        if len(trns_list) > 0:
-            return A.Compose(trns_list, p=1.0)
-        else:
-            return None
 
 class Normalize:
     def __call__(self, y: np.ndarray):
@@ -209,6 +194,18 @@ class Compose:
         return y
 
 
+class OneOf:
+    def __init__(self, transforms: list):
+        self.transforms = transforms
+
+    def __call__(self, y: np.ndarray):
+        n_trns = len(self.transforms)
+        trns_idx = np.random.choice(n_trns)
+        trns = self.transforms[trns_idx]
+        y = trns(y)
+        return y
+
+
 class AudioTransform:
     def __init__(self, always_apply=False, p=0.5):
         self.always_apply = always_apply
@@ -227,53 +224,6 @@ class AudioTransform:
         raise NotImplementedError
 
 
-
-class MelSpectrogram(AudioTransform):
-    '''
-    メルスペクトログラムに変換する
-    '''
-    def __init__(self, always_apply=True, p=0.5, sr=32000,
-            n_mels=128, fmin=20, fmax=16001):
-        super().__init__(always_apply, p)
-        self.sr = sr
-        self.n_mels = n_mels
-        self.fmin = fmin
-        self.fmax = fmax
-
-    def apply(self, y: np.ndarray, **params):
-        melspec = librosa.feature.melspectrogram(
-                y, sr=self.sr, n_mels=self.n_mels,
-                fmin=self.fmin, fmax=self.fmax, **params
-                )
-        augmented = librosa.power_to_db(melspec).astype(np.float32)        
-        return augmented
-
-class MFCC(AudioTransform):
-    '''
-    MFCCに変換する
-    '''
-    def __init__(self, always_apply=True, p=0.5, sr=32000,
-            n_mels=128, fmin=20, fmax=16001, n_mfcc=20,
-            dct_type=2, norm='ortho'):
-        super().__init__(always_apply, p)
-        self.sr = sr
-        self.n_mels = n_mels
-        self.fmin = fmin
-        self.fmax = fmax
-        self.n_mfcc = n_mfcc
-        self.dct_type = dct_type
-        self.norm = norm
-
-    def apply(self, y: np.ndarray, **params):
-        mfcc = librosa.feature.mfcc(
-                y, sr=self.sr, n_mels=self.n_mels,
-                fmin=self.fmin, fmax=self.fmax, 
-                n_mfcc=self.n_mfcc, dct_type=self.dct_type,
-                norm=self.norm, **params
-                )
-        augmented = mfcc.astype(np.float32)        
-        return augmented 
-
 class NoiseInjection(AudioTransform):
     def __init__(self, always_apply=False, p=0.5, max_noise_level=0.5, sr=32000):
         super().__init__(always_apply, p)
@@ -284,7 +234,7 @@ class NoiseInjection(AudioTransform):
     def apply(self, y: np.ndarray, **params):
         noise_level = np.random.uniform(*self.noise_level)
         noise = np.random.randn(len(y))
-        augmented = (y + noise * noise_level).astype(y.dtype)
+        augmented = (y + (noise * noise_level).reshape(-1, 1)).astype(y.dtype)
         return augmented
 
 
@@ -303,7 +253,7 @@ class GaussianNoise(AudioTransform):
 
         white_noise = np.random.randn(len(y))
         a_white = np.sqrt(white_noise ** 2).max()
-        augmented = (y + white_noise * 1 / a_white * a_noise).astype(y.dtype)
+        augmented = (y + (white_noise * 1 / a_white * a_noise).reshape(-1, 1)).astype(y.dtype)
         return augmented
 
 
@@ -322,7 +272,7 @@ class PinkNoise(AudioTransform):
 
         pink_noise = cn.powerlaw_psd_gaussian(1, len(y))
         a_pink = np.sqrt(pink_noise ** 2).max()
-        augmented = (y + pink_noise * 1 / a_pink * a_noise).astype(y.dtype)
+        augmented = (y + (pink_noise * 1 / a_pink * a_noise).reshape(-1, 1)).astype(y.dtype)
         return augmented
 
 
@@ -404,18 +354,6 @@ class RandomVolume(AudioTransform):
             return volume_up(y, db)
         else:
             return volume_down(y, db)
-
-
-class OneOf:
-    def __init__(self, transforms: list):
-        self.transforms = transforms
-
-    def __call__(self, y: np.ndarray):
-        n_trns = len(self.transforms)
-        trns_idx = np.random.choice(n_trns)
-        trns = self.transforms[trns_idx]
-        y = trns(y)
-        return y
 
 
 class CosineVolume(AudioTransform):
