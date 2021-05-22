@@ -41,7 +41,7 @@ from src.utils import *
 
 
 INPUT_DIR = './input'
-DEBUG = False
+DEBUG = CFG.debug
 
 
 def main():
