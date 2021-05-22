@@ -31,6 +31,6 @@ for i in tqdm(range(len(AUDIO_PATHS))):
             n_fft=CFG.n_fft,
             hop_length=CFG.hop_length,
             )
-    logmel = np.log(mel)
+    logmel = librosa.power_to_db(mel, ref=np.max)
 
     np.save(Path(OUTPUT_DIR, dir_name, filename+'.npy'), logmel.astype(np.uint8))
