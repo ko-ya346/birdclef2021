@@ -63,7 +63,8 @@ class WaveformDataset(torchdata.Dataset):
         ebird_code = sample["primary_label"]
 
         y = np.load(self.datadir / ebird_code / wav_name)
-#        y = self._normalize(y) 
+        # dBスケールに変換
+        y = librosa.power_to_db(y, ref=np.max) 
 
         # todo 引数で与えるように変更
         sr = 32000
