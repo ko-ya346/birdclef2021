@@ -17,7 +17,6 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as torchdata
-import colorednoise as cn
 
 from pathlib import Path
 from typing import List
@@ -125,9 +124,8 @@ class TestDataset(torchdata.Dataset):
         start_index = SR * start_seconds
         end_index = SR * end_seconds
 
-        y = self.clip[start_index:end_index].astype(np.float32)
+        y = self.clip[start_index:end_index]
 
-        y = np.nan_to_num(y)
         y = librosa.feature.melspectrogram(
                 y=y, sr=SR, n_fft=CFG.n_fft, hop_length=CFG.hop_length,
            )
@@ -135,6 +133,13 @@ class TestDataset(torchdata.Dataset):
 
         if self.waveform_transforms:
             y = self.waveform_transforms(y)
+
+        y = y.astype(np.float32)
+        y = np.nan_to_num(y)
+        y = y.transpose(1, 0)
+
+        # channelの次元を足す
+        y = y[np.newaxis, ...]
 
         return y, row_id
 
@@ -266,6 +271,7 @@ class PinkNoise(AudioTransform):
         self.sr = sr
 
     def apply(self, y: np.ndarray, **params):
+        import colorednoise as cn
         snr = np.random.uniform(self.min_snr, self.max_snr)
         a_signal = np.sqrt(y ** 2).max()
         a_noise = a_signal / (10 ** (snr / 20))
