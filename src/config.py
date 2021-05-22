@@ -7,9 +7,13 @@ class CFG:
     # Globals #
     ######################
     seed = 1213
-    epochs = 10 
+    debug = False
+    epochs = 5 
     train = True
-    folds = [0, 1, 2]
+    folds = [
+            0,
+            #1, 2
+            ]
     img_size = 112 
     main_metric = "epoch_f1_at_05"
     minimize_metric = False
@@ -24,7 +28,7 @@ class CFG:
     ######################
     # Dataset #
     ######################
-    period = 20 
+    period = 40 
     n_mels = 128 
     sample_rate = 32000
     fmin = 200
@@ -35,31 +39,36 @@ class CFG:
     train_transform_dic = [
             {'name': 'GaussianNoise', 
                 'params': {
-                    'p': 0.3,
+                    'p': 0.1,
                     'sr': sample_rate
                     }
                 },
             {'name': 'PinkNoise',
                 'params': {
-                    'p': 0.3,
+                    'p': 0.1,
                     'sr': sample_rate
+                    }
+                },
+#            {'name': 'PitchShift',
+#                'params': {
+#                    'p': 0.1,
+#                    'sr': sample_rate
+#                    }
+#                },
+#            {'name': 'TimeStretch',
+#                'params': {
+#                    'p': 0.1,
+#                    'sr': sample_rate
+#                    }
+#                },
+            {'name': 'RandomVolume',
+                'params': {
+                    'p': 0.1,
                     }
                 },
             { 
             'name': 'Normalize'
             },
-            {'name': 'PitchShift',
-                'params': {
-                    'p': 0.3,
-                    'sr': sample_rate
-                    }
-                },
-            {'name': 'TimeStretch',
-                'params': {
-                    'p': 0.3,
-                    'sr': sample_rate
-                    }
-                },
             ]
     test_transform_dic = [{
             'name': 'Normalize'
@@ -141,13 +150,13 @@ class CFG:
     ######################
     loader_params = {
         "train": {
-            "batch_size": 64,
+            "batch_size": 8,
             "num_workers": 0,
             "shuffle": True,
             'pin_memory': True
         },
         "valid": {
-            "batch_size": 64,
+            "batch_size": 8,
             "num_workers": 0,
             "shuffle": False,
             'pin_memory': True
