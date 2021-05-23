@@ -59,19 +59,18 @@ def prediction_for_clip(test_df: pd.DataFrame,
     loader = torchdata.DataLoader(dataset, batch_size=batch_size, shuffle=False)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model.eval()
     prediction_dict = {}
     for image, row_id in tqdm(loader):
         row_id = row_id[0]
         image = image.to(device)
 
-        proba = np.zeros(batch_size)
+        proba = np.zeros(397)
         for model in models:
+            model.eval()
             with torch.no_grad():
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
         proba /= len(models)
-
         events = proba >= threshold
         labels = np.argwhere(events).reshape(-1).tolist()
 
