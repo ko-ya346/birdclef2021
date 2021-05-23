@@ -143,7 +143,7 @@ class SampleF1Callback(Callback):
                  input_key: str = "targets",
                  output_key: str = "logits",
                  prefix: str = "f1",
-                 threshold=0.5):
+                 threshold=0.3):
         super().__init__(CallbackOrder.Metric)
 
         self.input_key = input_key
@@ -231,9 +231,9 @@ class mAPCallback(Callback):
 
 def get_callbacks():
     return [
-        SampleF1Callback(prefix="f1_at_05", threshold=0.5),
         SampleF1Callback(prefix="f1_at_03", threshold=0.3),
-        SampleF1Callback(prefix="f1_at_07", threshold=0.7),
+        SampleF1Callback(prefix="f1_at_02", threshold=0.2),
+        SampleF1Callback(prefix="f1_at_04", threshold=0.4),
         mAPCallback()
     ]
 
