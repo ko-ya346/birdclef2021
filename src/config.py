@@ -8,14 +8,14 @@ class CFG:
     ######################
     seed = 1213
     debug = False
-    epochs = 5 
+    epochs = 35 
     train = True
     folds = [
             0,
-            #1, 2
+            1, 2
             ]
     img_size = 112 
-    main_metric = "epoch_f1_at_05"
+    main_metric = "epoch_f1_at_03"
     minimize_metric = False
 
     ######################
