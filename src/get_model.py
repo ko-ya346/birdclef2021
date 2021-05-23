@@ -48,14 +48,15 @@ def prepare_model_for_inference(model, path: Path):
 
 def prediction_for_clip(test_df: pd.DataFrame,
                         clip: np.ndarray,
-                        model,
+                        models: list,
                         threshold=0.5,
+                        batch_size=1,
                         pred_keys='clipwise_output'):
 
     dataset = TestDataset(df=test_df,
                           clip=clip,
                           waveform_transforms=get_transforms(phase="test"))
-    loader = torchdata.DataLoader(dataset, batch_size=1, shuffle=False)
+    loader = torchdata.DataLoader(dataset, batch_size=batch_size, shuffle=False)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model.eval()
@@ -64,9 +65,12 @@ def prediction_for_clip(test_df: pd.DataFrame,
         row_id = row_id[0]
         image = image.to(device)
 
-        with torch.no_grad():
-            prediction = model(image)
-            proba = prediction[pred_keys].detach().cpu().numpy().reshape(-1)
+        proba = np.zeros(batch_size)
+        for model in models:
+            with torch.no_grad():
+                prediction = model(image)
+                proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
+        proba /= len(models)
 
         events = proba >= threshold
         labels = np.argwhere(events).reshape(-1).tolist()
@@ -81,7 +85,7 @@ def prediction_for_clip(test_df: pd.DataFrame,
 
 def prediction(test_audios,
 	       logger,
-               weights_path: Path,
+               weights_paths: list,
                threshold=0.5,
                pred_keys='clipwise_output'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -89,7 +93,11 @@ def prediction(test_audios,
                     pretrained=False,
                     num_classes=CFG.num_classes,
                     in_channels=CFG.in_channels)
-    model = prepare_model_for_inference(model, weights_path).to(device)
+
+    models = []
+    for weights_path in weights_paths:
+        load_model = prepare_model_for_inference(model, weights_path).to(device)
+        models.append(load_model)
 
     warnings.filterwarnings("ignore")
     prediction_dfs = []
@@ -111,7 +119,7 @@ def prediction(test_audios,
         with timer(f"Prediction on {audio_path}", logger):
             prediction_dict = prediction_for_clip(test_df,
                                                   clip=clip,
-                                                  model=model,
+                                                  models=models,
                                                   threshold=threshold,
                                                   pred_keys=pred_keys)
         row_id = list(prediction_dict.keys())
