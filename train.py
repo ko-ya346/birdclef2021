@@ -40,7 +40,6 @@ from src.get_model import *
 from src.utils import *
 
 
-INPUT_DIR = './input'
 DEBUG = CFG.debug
 
 
