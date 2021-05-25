@@ -58,10 +58,10 @@ class WaveformDataset(torchdata.Dataset):
 
     def __getitem__(self, idx: int):
         sample = self.df.loc[idx, :]
-        wav_name = sample["filename"] + '.npy'
-        ebird_code = sample["primary_label"]
+        wave_path= sample["wave_path"] + '.npy'
+        ebird_code_list = sample["primary_label"]
 
-        y = np.load(self.datadir / ebird_code / wav_name)
+        y = np.load(self.datadir / wave_path)
         sr = 32000
 
         if self.waveform_transforms:
@@ -95,7 +95,10 @@ class WaveformDataset(torchdata.Dataset):
         y = y[np.newaxis, ...]
 
         labels = np.zeros(len(CFG.target_columns), dtype=float)
-        labels[CFG.target_columns.index(ebird_code)] = 1.0
+        for ebird_code in ebird_code_list.replace('[', '').replace(']', '').replace("'", "").split(', '):
+            if ebird_code=='nocall':
+                continue
+            labels[CFG.target_columns.index(ebird_code)] = 1.0
 
         return {
             "image": y,
