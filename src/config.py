@@ -8,22 +8,22 @@ class CFG:
     ######################
     seed = 1213
     debug = False
-    epochs = 35 
+    epochs = 100 
     train = True
     folds = [
             0,
-            1, 2
+#            1, 2
             ]
     img_size = 112 
-    main_metric = "epoch_f1_at_03"
+    main_metric = "epoch_f1_at_05"
     minimize_metric = False
 
     ######################
     # Data #
     ######################
     train_datadir = Path('./output/train_short_audio')
-    train_csv = f"{INPUT_DIR}/train_metadata.csv"
-    train_soundscape = f"{INPUT_DIR}/train_soundscape_labels.csv"
+    train_csv = "./output/label.csv"
+    train_soundscape = "./output/train_soundscape_labels.csv"
 
     ######################
     # Dataset #
@@ -174,7 +174,7 @@ class CFG:
     ######################
     split = "StratifiedKFold"
     split_params = {
-        "n_splits": 3,
+        "n_splits": 5,
         "shuffle": True,
         "random_state": 1213
     }
