@@ -1,12 +1,8 @@
 import gc
 import os
-import math
-import random
 import warnings
 
 import albumentations as A
-import cv2
-import librosa
 import numpy as np
 import pandas as pd
 import soundfile as sf
@@ -19,23 +15,12 @@ import torch.utils.data as torchdata
 from tqdm.auto import tqdm
 
 from pathlib import Path
-from typing import List
-
-from albumentations.pytorch import ToTensorV2
-from albumentations.core.transforms_interface import ImageOnlyTransform
-from catalyst.core import Callback, CallbackOrder, IRunner
-from catalyst.dl import Runner, SupervisedRunner
-from sklearn import model_selection
-from sklearn import metrics
-from timm.models.layers import SelectAdaptivePool2d
-from torch.optim.optimizer import Optimizer
-from torchlibrosa.stft import LogmelFilterBank, Spectrogram
-from torchlibrosa.augmentation import SpecAugmentation
 
 from src.config import CFG
 from src.model import TimmSED 
 from src.dataset import TestDataset, get_transforms
 from src.utils import timer
+
 
 def prepare_model_for_inference(model, path: Path):
     if not torch.cuda.is_available():
@@ -66,12 +51,12 @@ def prediction_for_clip(test_df: pd.DataFrame,
 
         proba = np.zeros(397)
         for model in models:
-            model.eval()
             with torch.no_grad():
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
 
-            del model, prediction, image; gc.collect()
+            del model, prediction; gc.collect()
+        del image; gc.collect()
 
         proba /= len(models)
         events = proba >= threshold
@@ -83,18 +68,23 @@ def prediction_for_clip(test_df: pd.DataFrame,
             labels_str_list = list(map(lambda x: CFG.target_columns[x], labels))
             label_string = " ".join(labels_str_list)
             prediction_dict[row_id] = label_string
+
+    del loader; gc.collect()
+
     return prediction_dict
 
 def prediction(test_audios,
 	       logger,
                weights_paths: list,
                threshold=0.5,
-               pred_keys='clipwise_output'):
+               pred_keys='clipwise_output',
+               TEST=False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = TimmSED(base_model_name=CFG.base_model_name,
                     pretrained=False,
                     num_classes=CFG.num_classes,
-                    in_channels=CFG.in_channels)
+                    in_channels=CFG.in_channels,
+                    TEST=TEST)
 
     models = []
     for weights_path in weights_paths:
@@ -133,7 +123,7 @@ def prediction(test_audios,
         })
         prediction_dfs.append(prediction_df)
 
-        del prediction_df, prediction_dict, clip; gc.collect()
+        del test_df, prediction_df, prediction_dict, clip; gc.collect()
 
     prediction_df = pd.concat(prediction_dfs, axis=0, sort=False).reset_index(drop=True)
     return prediction_df
