@@ -181,6 +181,7 @@ class TimmSED(nn.Module):
     def __init__(self, base_model_name: str, 
             pretrained=False, num_classes=24, in_channels=1, TEST=False):
         super().__init__()
+        self.TEST = TEST
         # Spectrogram extractor
         self.spectrogram_extractor = Spectrogram(n_fft=CFG.n_fft, 
                 hop_length=CFG.hop_length,
@@ -226,7 +227,7 @@ class TimmSED(nn.Module):
 
     def forward(self, x):
         # (batch_size, 1, time_steps, freq_bins)
-        if TEST:
+        if self.TEST:
             x = self.spectrogram_extractor(x)
             x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
 
