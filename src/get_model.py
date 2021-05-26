@@ -70,6 +70,9 @@ def prediction_for_clip(test_df: pd.DataFrame,
             with torch.no_grad():
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
+
+            del model, prediction, image; gc.collect()
+
         proba /= len(models)
         events = proba >= threshold
         labels = np.argwhere(events).reshape(-1).tolist()
@@ -97,6 +100,7 @@ def prediction(test_audios,
     for weights_path in weights_paths:
         load_model = prepare_model_for_inference(model, weights_path).to(device)
         models.append(load_model)
+        del load_model; gc.collect()
 
     warnings.filterwarnings("ignore")
     prediction_dfs = []
@@ -128,6 +132,8 @@ def prediction(test_audios,
             "birds": birds
         })
         prediction_dfs.append(prediction_df)
+
+        del prediction_df, orediction_dict, clip; gc.collect()
 
     prediction_df = pd.concat(prediction_dfs, axis=0, sort=False).reset_index(drop=True)
     return prediction_df

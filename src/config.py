@@ -162,7 +162,7 @@ class CFG:
             'pin_memory': True
         },
         "test": {
-            "batch_size": 64,
+            "batch_size": 32,
             "num_workers": 20,
             "shuffle": False,
             'pin_memory': True
