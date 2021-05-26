@@ -1,26 +1,14 @@
-import cv2
-import audioread
-import logging
-import os
 import random
-import time
 import warnings
 
-import librosa
 import numpy as np
-import pandas as pd
-import soundfile as sf
 import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.utils.data as torchdata
 
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
 
-from albumentations.core.transforms_interface import ImageOnlyTransform
 from torchlibrosa.stft import LogmelFilterBank, Spectrogram
 from torchlibrosa.augmentation import SpecAugmentation
 from tqdm.auto import tqdm
@@ -191,7 +179,7 @@ class AttBlockV2(nn.Module):
 
 class TimmSED(nn.Module):
     def __init__(self, base_model_name: str, 
-            pretrained=False, num_classes=24, in_channels=1):
+            pretrained=False, num_classes=24, in_channels=1, TEST=False):
         super().__init__()
         # Spectrogram extractor
         self.spectrogram_extractor = Spectrogram(n_fft=CFG.n_fft, 
@@ -236,12 +224,12 @@ class TimmSED(nn.Module):
         init_layer(self.fc1)
         init_bn(self.bn0)
 
-    def forward(self, input_data):
+    def forward(self, x):
         # (batch_size, 1, time_steps, freq_bins)
-#        x = self.spectrogram_extractor(input_data)
-#        x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
+        if TEST:
+            x = self.spectrogram_extractor(x)
+            x = self.logmel_extractor(x)    # (batch_size, 1, time_steps, mel_bins)
 
-        x = input_data
         frames_num = x.shape[2]
 
         x = x.transpose(1, 3)
@@ -293,3 +281,4 @@ class TimmSED(nn.Module):
         }
 
         return output_dict
+
