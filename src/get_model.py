@@ -133,7 +133,7 @@ def prediction(test_audios,
         })
         prediction_dfs.append(prediction_df)
 
-        del prediction_df, orediction_dict, clip; gc.collect()
+        del prediction_df, prediction_dict, clip; gc.collect()
 
     prediction_df = pd.concat(prediction_dfs, axis=0, sort=False).reset_index(drop=True)
     return prediction_df
