@@ -19,7 +19,7 @@ from pathlib import Path
 from src.config import CFG
 from src.model import TimmSED 
 from src.dataset import TestDataset, get_transforms
-from src.utils import timer, print_varsize
+from src.utils import timer, print_varsize_global, print_varsize_local
 
 
 def prepare_model_for_inference(model, path: Path):
@@ -54,6 +54,7 @@ def prediction_for_clip(test_df: pd.DataFrame,
             with torch.no_grad():
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
+            print_varsize_local()
 
             del model, prediction; gc.collect()
         del image; gc.collect()
@@ -70,6 +71,7 @@ def prediction_for_clip(test_df: pd.DataFrame,
             prediction_dict[row_id] = label_string
 
     del loader; gc.collect()
+    print_varsize_local()
 
     return prediction_dict
 
@@ -127,7 +129,7 @@ def prediction(test_audios,
         prediction_birds.append(birds)
 
         del clip; gc.collect()
-        print_varsize()
+        print_varsize_local()
 
     prediction_df = pd.DataFrame(
             {"row_id": prediction_row_id,

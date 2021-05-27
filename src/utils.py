@@ -246,11 +246,21 @@ def get_line_token():
     return token
 
 
-def print_varsize():
+def print_varsize_global():
     import types
     print("{}{: >15}{}{: >10}{}".format('|','Variable Name','|','  Size','|')) 
     print(" -------------------------- ")
     for k, v in globals().items():
+        if hasattr(v, 'size') and not k.startswith('_') and not isinstance(v,types.ModuleType):
+            print("{}{: >15}{}{: >10}{}".format('|',k,'|',str(v.size),'|'))
+        elif hasattr(v, '__len__') and not k.startswith('_') and not isinstance(v,types.ModuleType):
+            print("{}{: >15}{}{: >10}{}".format('|',k,'|',str(len(v)),'|'))
+
+def print_varsize_local():
+    import types
+    print("{}{: >15}{}{: >10}{}".format('|','Variable Name','|','  Size','|')) 
+    print(" -------------------------- ")
+    for k, v in locals().items():
         if hasattr(v, 'size') and not k.startswith('_') and not isinstance(v,types.ModuleType):
             print("{}{: >15}{}{: >10}{}".format('|',k,'|',str(v.size),'|'))
         elif hasattr(v, '__len__') and not k.startswith('_') and not isinstance(v,types.ModuleType):
