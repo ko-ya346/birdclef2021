@@ -247,7 +247,7 @@ def get_line_token():
 
 
 def print_varsize():
-    import type
+    import types
     print("{}{: >15}{}{: >10}{}".format('|','Variable Name','|','  Size','|')) 
     print(" -------------------------- ")
     for k, v in globals().items():
