@@ -93,7 +93,10 @@ def prediction(test_audios,
         del load_model; gc.collect()
 
     warnings.filterwarnings("ignore")
-    prediction_dfs = []
+#    prediction_dfs = []
+    prediction_row_id = []
+    prediction_birds = []
+
     for audio_path in test_audios:
         with timer(f"Loading {str(audio_path)}", logger):
             clip, _ = sf.read(audio_path)
@@ -115,15 +118,16 @@ def prediction(test_audios,
                                                   models=models,
                                                   threshold=threshold,
                                                   pred_keys=pred_keys)
-        row_id = list(prediction_dict.keys())
-        birds = list(prediction_dict.values())
-        prediction_df = pd.DataFrame({
-            "row_id": row_id,
-            "birds": birds
-        })
-        prediction_dfs.append(prediction_df)
+        row_id = prediction_dict.keys()
+        birds = prediction_dict.values()
 
-        del test_df, prediction_df, prediction_dict, clip; gc.collect()
+        prediction_row_id.append(row_id)
+        prediction_birds.append(birds)
 
-    prediction_df = pd.concat(prediction_dfs, axis=0, sort=False).reset_index(drop=True)
+        del clip; gc.collect()
+
+    prediction_df = pd.DataFrame(
+            {"row_id": prediction_row_id,
+             "birds":  orediction_birds}
+            )
     return prediction_df
