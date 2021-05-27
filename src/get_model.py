@@ -54,7 +54,6 @@ def prediction_for_clip(test_df: pd.DataFrame,
             with torch.no_grad():
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
-            print_varsize_local()
 
             del model, prediction; gc.collect()
         del image; gc.collect()
@@ -71,8 +70,6 @@ def prediction_for_clip(test_df: pd.DataFrame,
             prediction_dict[row_id] = label_string
 
     del loader; gc.collect()
-    print_varsize_local()
-
     return prediction_dict
 
 def prediction(test_audios,
@@ -96,8 +93,8 @@ def prediction(test_audios,
 
     warnings.filterwarnings("ignore")
 #    prediction_dfs = []
-    prediction_row_id = []
-    prediction_birds = []
+    prediction_row_id = np.array([])
+    prediction_birds = np.array([])
 
     for audio_path in test_audios:
         with timer(f"Loading {str(audio_path)}", logger):
@@ -125,11 +122,10 @@ def prediction(test_audios,
         row_id = prediction_dict.keys()
         birds = prediction_dict.values()
 
-        prediction_row_id.append(row_id)
-        prediction_birds.append(birds)
+        np.append(prediction_row_id, row_id)
+        np.append(prediction_birds, birds)
 
         del clip; gc.collect()
-        print_varsize_local()
 
     prediction_df = pd.DataFrame(
             {"row_id": prediction_row_id,
