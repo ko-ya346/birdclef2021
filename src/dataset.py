@@ -1,6 +1,5 @@
 import gc
 import os
-import math
 import random
 import warnings
 import librosa
@@ -23,14 +22,6 @@ from typing import List
 
 from albumentations.pytorch import ToTensorV2
 from albumentations.core.transforms_interface import ImageOnlyTransform
-from catalyst.core import Callback, CallbackOrder, IRunner
-from catalyst.dl import Runner, SupervisedRunner
-from sklearn import model_selection
-from sklearn import metrics
-from timm.models.layers import SelectAdaptivePool2d
-from torch.optim.optimizer import Optimizer
-from torchlibrosa.stft import LogmelFilterBank, Spectrogram
-from torchlibrosa.augmentation import SpecAugmentation
 
 from src.config import CFG
 
@@ -127,22 +118,22 @@ class TestDataset(torchdata.Dataset):
         start_index = SR * start_seconds
         end_index = SR * end_seconds
 
-        y = self.clip[start_index:end_index]
+        y = self.clip[start_index:end_index].astype(np.float32)
 
-        y = librosa.feature.melspectrogram(
-                y=y, sr=SR, n_fft=CFG.n_fft, hop_length=CFG.hop_length,
-           )
-        y = librosa.power_to_db(y, ref=np.max)
+        y = np.nan_to_num(y)
+#        y = librosa.feature.melspectrogram(
+#                y=y, sr=SR, n_fft=CFG.n_fft, hop_length=CFG.hop_length,
+#           )
+#        y = librosa.power_to_db(y, ref=np.max)
 
         if self.waveform_transforms:
             y = self.waveform_transforms(y)
 
-        y = y.astype(np.float32)
         y = np.nan_to_num(y)
-        y = y.transpose(1, 0)
-
-        # channelの次元を足す
-        y = y[np.newaxis, ...]
+#        y = y.transpose(1, 0)
+#
+#        # channelの次元を足す
+#        y = y[np.newaxis, ...]
 
         return y, row_id
 
