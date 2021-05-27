@@ -98,7 +98,6 @@ def prediction(test_audios,
     prediction_birds = []
 
     for audio_path in test_audios:
-        print_varsize()
         with timer(f"Loading {str(audio_path)}", logger):
 
 
@@ -128,6 +127,7 @@ def prediction(test_audios,
         prediction_birds.append(birds)
 
         del clip; gc.collect()
+        print_varsize()
 
     prediction_df = pd.DataFrame(
             {"row_id": prediction_row_id,
