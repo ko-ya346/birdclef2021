@@ -1,32 +1,18 @@
-import sys
-import requests
 import json
-import cv2
-import audioread
 import logging
 import os
 import random
 import time
 import warnings
 
-import librosa
 import numpy as np
-import pandas as pd
-import soundfile as sf
-import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.utils.data as torchdata
 
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Optional
 from sklearn import metrics
-from albumentations.core.transforms_interface import ImageOnlyTransform
-from torchlibrosa.stft import LogmelFilterBank, Spectrogram
-from torchlibrosa.augmentation import SpecAugmentation
-from tqdm.auto import tqdm
 from catalyst.core import Callback, CallbackOrder, IRunner
 from catalyst.dl import Runner, SupervisedRunner
 import torch.optim as optim
@@ -258,3 +244,14 @@ def get_line_token():
     with open('line_token.json', 'r') as f:
          token = json.load(f)['token']
     return token
+
+
+def print_varsize():
+    import type
+    print("{}{: >15}{}{: >10}{}".format('|','Variable Name','|','  Size','|')) 
+    print(" -------------------------- ")
+    for k, v in globals().items():
+        if hasattr(v, 'size') and not k.startswith('_') and not isinstance(v,types.ModuleType):
+            print("{}{: >15}{}{: >10}{}".format('|',k,'|',str(v.size),'|'))
+        elif hasattr(v, '__len__') and not k.startswith('_') and not isinstance(v,types.ModuleType):
+            print("{}{: >15}{}{: >10}{}".format('|',k,'|',str(len(v)),'|'))

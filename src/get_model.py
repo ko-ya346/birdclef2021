@@ -19,7 +19,7 @@ from pathlib import Path
 from src.config import CFG
 from src.model import TimmSED 
 from src.dataset import TestDataset, get_transforms
-from src.utils import timer
+from src.utils import timer, print_varsize
 
 
 def prepare_model_for_inference(model, path: Path):
@@ -98,7 +98,10 @@ def prediction(test_audios,
     prediction_birds = []
 
     for audio_path in test_audios:
+        print_varsize()
         with timer(f"Loading {str(audio_path)}", logger):
+
+
             clip, _ = sf.read(audio_path)
 
         seconds = []
