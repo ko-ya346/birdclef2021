@@ -92,14 +92,11 @@ def prediction(test_audios,
         del load_model; gc.collect()
 
     warnings.filterwarnings("ignore")
-#    prediction_dfs = []
     prediction_row_id = np.array([])
     prediction_birds = np.array([])
 
     for audio_path in test_audios:
         with timer(f"Loading {str(audio_path)}", logger):
-
-
             clip, _ = sf.read(audio_path)
 
         seconds = []
