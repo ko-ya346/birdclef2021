@@ -56,9 +56,6 @@ def prediction_for_clip(test_df: pd.DataFrame,
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
 
-            del model, prediction; gc.collect()
-        del image; gc.collect()
-
         proba /= len(models)
         events = proba >= threshold
         labels = np.argwhere(events).reshape(-1).tolist()
@@ -70,7 +67,6 @@ def prediction_for_clip(test_df: pd.DataFrame,
             label_string = " ".join(labels_str_list)
             prediction_dict[row_id] = label_string
 
-    del loader; gc.collect()
     return prediction_dict
 
 def prediction(test_audios,
@@ -90,7 +86,6 @@ def prediction(test_audios,
     for weights_path in weights_paths:
         load_model = prepare_model_for_inference(model, weights_path).to(device)
         models.append(load_model)
-        del load_model; gc.collect()
 
     warnings.filterwarnings("ignore")
     prediction_row_id = np.array([])
@@ -117,11 +112,11 @@ def prediction(test_audios,
                                                   models=models,
                                                   threshold=threshold,
                                                   pred_keys=pred_keys)
-        row_id = prediction_dict.keys()
-        birds = prediction_dict.values()
+        row_id = list(prediction_dict.keys())
+        birds = list(prediction_dict.values())
 
-        np.append(prediction_row_id, row_id)
-        np.append(prediction_birds, birds)
+        prediction_row_id = np.concatenate([prediction_row_id, row_id], 0)
+        prediction_birds = np.concatenate([prediction_birds, birds], 0)
 
         del clip; gc.collect()
 
