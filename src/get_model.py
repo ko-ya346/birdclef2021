@@ -126,6 +126,6 @@ def prediction(test_audios,
 
     prediction_df = pd.DataFrame(
             {"row_id": prediction_row_id,
-             "birds":  orediction_birds}
+             "birds": prediction_birds}
             )
     return prediction_df
