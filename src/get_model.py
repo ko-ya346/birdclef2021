@@ -51,6 +51,7 @@ def prediction_for_clip(test_df: pd.DataFrame,
 
         proba = np.zeros(397)
         for model in models:
+            model.eval()
             with torch.no_grad():
                 prediction = model(image)
                 proba += prediction[pred_keys].detach().cpu().numpy().reshape(-1)
