@@ -165,7 +165,6 @@ class CFG:
             "batch_size": 32,
             "num_workers": 20,
             "shuffle": False,
-            'pin_memory': True
         }
     }
 
